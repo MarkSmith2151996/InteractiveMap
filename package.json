@@ -1,0 +1,16 @@
+{
+  "name": "interactivemap",
+  "version": "1.0.0",
+  "description": "This is a simple interactive map project using **Leaflet.js** and **OpenCage Geocoder API** for reverse geocoding. The app shows the user's current location on the map and provides the address of that location.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "express": "^4.21.2"
+  }
+}

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Enhanced Interactive Map</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <!-- Leaflet Routing Machine -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="Search for a location...">
+      <button id="search-btn" class="btn"><i class="fas fa-search"></i></button>
+    </div>
+
+    <div class="navigation-container hidden">
+      <h3>Navigation</h3>
+      <input type="text" id="start-point" placeholder="Starting point...">
+      <input type="text" id="end-point" placeholder="Destination...">
+      <div class="transport-modes">
+        <button class="transport-btn active" data-mode="car"><i class="fas fa-car"></i></button>
+        <button class="transport-btn" data-mode="walking"><i class="fas fa-walking"></i></button>
+        <button class="transport-btn" data-mode="bicycle"><i class="fas fa-bicycle"></i></button>
+      </div>
+      <button id="get-directions" class="btn"><i class="fas fa-directions"></i> Get Directions</button>
+      <div id="route-info"></div>
+    </div>
+
+    <div class="weather-container hidden">
+      <h3>Weather Information</h3>
+      <div id="current-weather"></div>
+      <div id="weather-forecast"></div>
+    </div>
+
+    <div class="traffic-container hidden">
+      <h3>Traffic & Road Conditions</h3>
+      <div class="layer-toggles">
+        <label>
+          <input type="checkbox" id="traffic-layer"> Show Traffic
+        </label>
+        <label>
+          <input type="checkbox" id="roadwork-layer"> Show Roadwork
+        </label>
+        <label>
+          <input type="checkbox" id="incidents-layer"> Show Incidents
+        </label>
+      </div>
+      <div id="traffic-info"></div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div id="map" class="map"></div>
+    
+    <div class="controls">
+      <div class="button-group">
+        <button id="toggle-navigation" class="btn"><i class="fas fa-route"></i> Navigation</button>
+        <button id="toggle-weather" class="btn"><i class="fas fa-cloud-sun"></i> Weather</button>
+        <button id="toggle-traffic" class="btn"><i class="fas fa-traffic-light"></i> Traffic</button>
+        <button id="find-location" class="btn"><i class="fas fa-location-arrow"></i> My Location</button>
+        <button id="measure-distance" class="btn"><i class="fas fa-ruler"></i> Measure</button>
+        <button id="clear-all" class="btn"><i class="fas fa-trash"></i> Clear</button>
+      </div>
+      <div id="status-info"></div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="info-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Location Details</h2>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
