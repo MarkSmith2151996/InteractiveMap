@@ -1,93 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Enhanced Interactive Map</title>
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-  <!-- Leaflet Routing Machine -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="description" content="Interactive map application with weather, traffic, and navigation features">
+    <title>Enhanced Interactive Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    
+    <!-- Leaflet Routing Machine CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    
+    <!-- Leaflet Control Geocoder CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="sidebar">
-    <div class="search-container">
-      <input type="text" id="search-input" placeholder="Search for a location...">
-      <button id="search-btn" class="btn"><i class="fas fa-search"></i></button>
+    <div class="sidebar" aria-label="Tools and Information Panel">
+        <!-- Location Details Container -->
+        <div class="location-details-container">
+            <div class="location-header" id="location-header">
+                <h3>Location Details <i class="fas fa-chevron-down"></i></h3>
+            </div>
+            <div class="location-content collapsed" id="location-content">
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span id="address"></span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-compass"></i>
+                        <span id="coordinates"></span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-road"></i>
+                        <span id="nearest-road"></span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-building"></i>
+                        <span id="nearby-places"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search bar -->
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search for a location..." aria-label="Search location">
+            <button id="search-btn" class="btn" aria-label="Search"><i class="fas fa-search"></i></button>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation-container hidden" aria-label="Navigation Panel">
+            <h3>Navigation</h3>
+            <form id="route-form">
+                <div class="navigation-inputs">
+                    <input type="text" id="route-start" placeholder="Starting point..." aria-label="Starting point">
+                    <input type="text" id="route-end" placeholder="Destination..." aria-label="Destination">
+                </div>
+                <select id="transport-mode" aria-label="Transport mode">
+                    <option value="driving">Drive</option>
+                    <option value="walking">Walk</option>
+                    <option value="cycling">Cycle</option>
+                </select>
+                <button type="submit" id="get-directions" class="btn">
+                    <i class="fas fa-directions"></i> Get Directions
+                </button>
+            </form>
+            <div id="route-info" aria-live="polite"></div>
+        </div>
+
+        <!-- Weather Information -->
+        <div class="weather-container hidden" aria-label="Weather Information">
+            <h3>Weather Information</h3>
+            <div id="current-weather" aria-live="polite"></div>
+            <div id="weather-forecast" aria-live="polite"></div>
+        </div>
+
+        <!-- Traffic & Road Conditions -->
+        <div class="traffic-container hidden" aria-label="Traffic Information">
+            <h3>Traffic & Road Conditions</h3>
+            <div class="layer-toggles">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="traffic-layer">
+                    <span>Show Traffic</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="roadwork-layer">
+                    <span>Show Roadwork</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="incidents-layer">
+                    <span>Show Incidents</span>
+                </label>
+            </div>
+            <div id="traffic-info" aria-live="polite"></div>
+        </div>
     </div>
 
-    <div class="navigation-container hidden">
-      <h3>Navigation</h3>
-      <input type="text" id="start-point" placeholder="Starting point...">
-      <input type="text" id="end-point" placeholder="Destination...">
-      <div class="transport-modes">
-        <button class="transport-btn active" data-mode="car"><i class="fas fa-car"></i></button>
-        <button class="transport-btn" data-mode="walking"><i class="fas fa-walking"></i></button>
-        <button class="transport-btn" data-mode="bicycle"><i class="fas fa-bicycle"></i></button>
-      </div>
-      <button id="get-directions" class="btn"><i class="fas fa-directions"></i> Get Directions</button>
-      <div id="route-info"></div>
-    </div>
+    <main class="main-content">
+        <div id="map" class="map" aria-label="Interactive Map"></div>
+        
+        <div class="controls" role="toolbar" aria-label="Map Controls">
+            <div class="button-group">
+                <button id="toggle-navigation" class="btn" aria-label="Toggle Navigation Panel">
+                    <i class="fas fa-route"></i> Navigation
+                </button>
+                <button id="toggle-weather" class="btn" aria-label="Toggle Weather Panel">
+                    <i class="fas fa-cloud-sun"></i> Weather
+                </button>
+                <button id="toggle-traffic" class="btn" aria-label="Toggle Traffic Panel">
+                    <i class="fas fa-traffic-light"></i> Traffic
+                </button>
+                <button id="find-location" class="btn" aria-label="Find My Location">
+                    <i class="fas fa-location-arrow"></i> My Location
+                </button>
+                <button id="measure-distance" class="btn" aria-label="Measure Distance">
+                    <i class="fas fa-ruler"></i> Measure
+                </button>
+                <button id="clear-all" class="btn" aria-label="Clear Map">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+            </div>
+            <div id="status-info" aria-live="polite" role="status"></div>
+        </div>
+    </main>
 
-    <div class="weather-container hidden">
-      <h3>Weather Information</h3>
-      <div id="current-weather"></div>
-      <div id="weather-forecast"></div>
-    </div>
-
-    <div class="traffic-container hidden">
-      <h3>Traffic & Road Conditions</h3>
-      <div class="layer-toggles">
-        <label>
-          <input type="checkbox" id="traffic-layer"> Show Traffic
-        </label>
-        <label>
-          <input type="checkbox" id="roadwork-layer"> Show Roadwork
-        </label>
-        <label>
-          <input type="checkbox" id="incidents-layer"> Show Incidents
-        </label>
-      </div>
-      <div id="traffic-info"></div>
-    </div>
-  </div>
-
-  <div class="main-content">
-    <div id="map" class="map"></div>
-    
-    <div class="controls">
-      <div class="button-group">
-        <button id="toggle-navigation" class="btn"><i class="fas fa-route"></i> Navigation</button>
-        <button id="toggle-weather" class="btn"><i class="fas fa-cloud-sun"></i> Weather</button>
-        <button id="toggle-traffic" class="btn"><i class="fas fa-traffic-light"></i> Traffic</button>
-        <button id="find-location" class="btn"><i class="fas fa-location-arrow"></i> My Location</button>
-        <button id="measure-distance" class="btn"><i class="fas fa-ruler"></i> Measure</button>
-        <button id="clear-all" class="btn"><i class="fas fa-trash"></i> Clear</button>
-      </div>
-      <div id="status-info"></div>
-    </div>
-  </div>
-
-  <!-- Modals -->
-  <div id="info-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>Location Details</h2>
-      <div id="modal-content"></div>
-    </div>
-  </div>
-
-  <!-- Scripts -->
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
-  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-  <script src="script.js"></script>
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
