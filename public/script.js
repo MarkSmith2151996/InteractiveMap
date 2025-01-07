@@ -56,6 +56,37 @@ async function initializeMap() {
       showError('Failed to initialize map');
   }
 }
+async function fetchAndDebug(endpoint, updateFunction, type) {
+  try {
+      console.log(`Fetching ${type} data from ${endpoint}...`);
+      const response = await axios.get(endpoint);
+      console.log(`${type} API response:`, response.data);
+
+      if (response.data && response.data[type]) {
+          updateFunction(response.data[type]);
+      } else {
+          console.warn(`No ${type} data available in the response.`);
+          document.getElementById(`${type}-info`).textContent = `No ${type} data available yet.`;
+      }
+  } catch (error) {
+      console.error(`Error fetching ${type} data from ${endpoint}:`, error);
+  }
+}
+
+function updateDebugInfo(containerId, data, type) {
+  console.log(`Updating ${type} info:`, data);
+  const container = document.getElementById(containerId);
+  if (container) {
+      container.innerHTML = data.map((item) => `<p>${item.description}</p>`).join("");
+  } else {
+      console.error(`${type} container element with ID "${containerId}" not found!`);
+  }
+}
+
+// Example usage:
+fetchAndDebug("/api/traffic", (data) => updateDebugInfo("traffic-info", data, "traffic"), "traffic");
+fetchAndDebug("/api/roadwork", (data) => updateDebugInfo("roadwork-info", data, "roadwork"), "roadwork");
+fetchAndDebug("/api/incidents", (data) => updateDebugInfo("incident-info", data, "incidents"), "incidents");
 
 // Custom marker icon
 const customIcon = L.icon({
@@ -87,6 +118,12 @@ function initializeRouting() {
   }).addTo(map);
 }
 
+// Existing initialization code (e.g., map setup, initial configuration)
+
+// Functions related to user location and geocoding
+// Existing initialization code (e.g., map setup, initial configuration)
+
+// Functions related to user location and geocoding
 async function calculateRoute(startLocation, endLocation) {
   try {
       showStatus('Calculating route...');
@@ -111,8 +148,7 @@ async function calculateRoute(startLocation, endLocation) {
       showError('Failed to calculate route');
   }
 }
-
-// Function to handle geolocation with tracking
+//Ender
 function locateUser() {
   if (!map) {
       showError('Map not initialized');
@@ -136,35 +172,41 @@ function locateUser() {
 }
 
 function handleLocationFound(e) {
-  // Remove previous user location markers
-  markers.filter(marker => marker.isUserLocation).forEach(marker => map.removeLayer(marker));
+    // Remove previous user location markers
+    markers = markers.filter(marker => {
+        if (marker.isUserLocation) {
+            map.removeLayer(marker);
+            return false;
+        }
+        return true;
+    });
 
-  const marker = L.marker(e.latlng, {icon: customIcon})
-      .addTo(map)
-      .bindPopup('Your current location')
-      .openPopup();
-  
-  marker.isUserLocation = true;
-  markers.push(marker);
+    const marker = L.marker(e.latlng, {icon: customIcon})
+        .addTo(map)
+        .bindPopup('Your current location')
+        .openPopup();
+    
+    marker.isUserLocation = true;
+    markers.push(marker);
 
-  updateLocationInfo(e.latlng.lat, e.latlng.lng);
-  showStatus('Location found!');
+    // Get address for the location
+    reverseGeocode(e.latlng.lat, e.latlng.lng);
+    updateLocationInfo(e.latlng.lat, e.latlng.lng);
+    showStatus('Location found!');
 }
-
 // Geocoding functions
+
 async function geocodeLocation(location) {
-  try {
-      const response = await fetch(`/api/geocode?q=${encodeURIComponent(location)}`);
-      if (!response.ok) throw new Error('Geocoding request failed');
-      
-      const data = await response.json();
-      if (!data.geometry) throw new Error('Location not found');
-      
-      return data.geometry;
-  } catch (error) {
-      console.error('Geocoding error:', error);
-      throw error;
-  }
+    try {
+        const response = await fetch(`/api/route?start=${encodeURIComponent(location)}&end=${encodeURIComponent(location)}`);
+        if (!response.ok) throw new Error('Geocoding request failed');
+        
+        const data = await response.json();
+        return data.route.start; // We only need the start coordinates since we're just geocoding one location
+    } catch (error) {
+        console.error('Geocoding error:', error);
+        throw error;
+    }
 }
 
 async function reverseGeocode(lat, lon) {
@@ -184,7 +226,7 @@ async function reverseGeocode(lat, lon) {
   }
 }
 
-// Weather function
+// Weather-related functions
 async function getWeather(lat, lon) {
   try {
       const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
@@ -220,7 +262,7 @@ async function getWeather(lat, lon) {
   }
 }
 
-// Traffic functions
+// Traffic-related functions
 async function getTrafficInfo(lat, lon) {
   try {
       const response = await fetch(`/api/traffic?lat=${lat}&lon=${lon}`);
@@ -274,21 +316,26 @@ function calculateDelayFactor(currentTime, freeFlowTime) {
   return (currentTime / freeFlowTime).toFixed(1);
 }
 
-function updateTrafficLayer(trafficInfo) {
-  if (!trafficLayer || !trafficInfo.coordinates) return;
-  
-  trafficLayer.clearLayers();
-  const congestionLevel = calculateCongestionLevel(trafficInfo.currentSpeed, trafficInfo.freeFlowSpeed);
-  const color = getTrafficColor(congestionLevel);
-  
-  if (trafficInfo.coordinates && Array.isArray(trafficInfo.coordinates)) {
-      const path = trafficInfo.coordinates.map(coord => [coord.latitude, coord.longitude]);
-      L.polyline(path, {
-          color: color,
-          weight: 5,
-          opacity: 0.7
-      }).addTo(trafficLayer);
-  }
+function updateTrafficInfo() {
+    console.log('Updating traffic info...');
+    fetch('/api/traffic')
+        .then(response => response.json())
+        .then(data => {
+            const trafficContainer = document.getElementById('traffic-info');
+            if (data.traffic && data.traffic.length > 0) {
+                const trafficHTML = data.traffic.map(item => `
+                    <div class="traffic-item ${item.severity}">
+                        <p><strong>${item.description}</strong></p>
+                        <p>Speed: ${item.speed} mph</p>
+                        <p>Delay: ${item.delay} minutes</p>
+                    </div>
+                `).join('');
+                trafficContainer.innerHTML = trafficHTML;
+            } else {
+                trafficContainer.innerHTML = '<p>No current traffic issues</p>';
+            }
+        })
+        .catch(error => console.error('Error fetching traffic data:', error));
 }
 
 function getTrafficColor(congestionLevel) {
@@ -300,7 +347,199 @@ function getTrafficColor(congestionLevel) {
   }
 }
 
-// Measurement functions
+// New functions to handle layer updates
+function updateTrafficInfo() {
+    console.log('Updating traffic info...');
+    fetch('/api/traffic')
+        .then(response => response.json())
+        .then(data => {
+            const trafficContainer = document.getElementById('traffic-info');
+            if (data.traffic && data.traffic.length > 0) {
+                const trafficHTML = data.traffic.map(item => `
+                    <div class="traffic-item ${item.severity}">
+                        <p><strong>${item.description}</strong></p>
+                        <p>Location: ${item.location}</p>
+                        <p>Speed: ${item.speed} mph</p>
+                        <p>Delay: ${item.delay} minutes</p>
+                    </div>
+                `).join('');
+                trafficContainer.innerHTML = trafficHTML;
+
+                // Clear existing traffic layers
+                trafficLayer.clearLayers();
+
+                // Add traffic data to the map
+                data.traffic.forEach(item => {
+                    if (item.coordinates) {
+                        const marker = L.circleMarker([item.coordinates.lat, item.coordinates.lng], {
+                            radius: 8,
+                            fillColor: getTrafficSeverityColor(item.severity),
+                            color: '#fff',
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        }).bindPopup(`
+                            <strong>${item.description}</strong><br>
+                            Speed: ${item.speed} mph<br>
+                            Delay: ${item.delay} minutes
+                        `);
+                        trafficLayer.addLayer(marker);
+                    }
+                });
+            } else {
+                trafficContainer.innerHTML = '<p>No current traffic issues</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching traffic data:', error);
+            document.getElementById('traffic-info').innerHTML = '<p>Error loading traffic data</p>';
+        });
+}
+
+function updateRoadworkInfo() {
+    console.log('Updating roadwork info...');
+    fetch('/api/roadwork')
+        .then(response => response.json())
+        .then(data => {
+            const roadworkContainer = document.getElementById('roadwork-info');
+            if (data.roadwork && data.roadwork.length > 0) {
+                const roadworkHTML = data.roadwork.map(item => `
+                    <div class="roadwork-item">
+                        <p><strong>${item.description}</strong></p>
+                        <p>Status: ${item.status}</p>
+                        <p>Impact: ${item.impact}</p>
+                        <p>Duration: ${item.startDate} - ${item.endDate}</p>
+                    </div>
+                `).join('');
+                roadworkContainer.innerHTML = roadworkHTML;
+
+                // Clear existing roadwork layers
+                roadworkLayer.clearLayers();
+
+                // Add roadwork markers to the map
+                data.roadwork.forEach(item => {
+                    const icon = L.divIcon({
+                        className: 'roadwork-icon',
+                        html: '<i class="fas fa-hard-hat"></i>',
+                        iconSize: [30, 30]
+                    });
+
+                    const marker = L.marker([item.lat, item.lng], { icon }).bindPopup(`
+                        <strong>${item.description}</strong><br>
+                        Status: ${item.status}<br>
+                        Impact: ${item.impact}<br>
+                        Duration: ${item.startDate} - ${item.endDate}
+                    `);
+                    roadworkLayer.addLayer(marker);
+                });
+            } else {
+                roadworkContainer.innerHTML = '<p>No current roadwork</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching roadwork data:', error);
+            document.getElementById('roadwork-info').innerHTML = '<p>Error loading roadwork data</p>';
+        });
+}
+
+function updateIncidentInfo() {
+    console.log('Updating incident info...');
+    fetch('/api/incidents')
+        .then(response => response.json())
+        .then(data => {
+            const incidentContainer = document.getElementById('incident-info');
+            if (data.incidents && data.incidents.length > 0) {
+                const incidentHTML = data.incidents.map(item => `
+                    <div class="incident-item ${item.severity}">
+                        <p><strong>${item.description}</strong></p>
+                        <p>Type: ${item.type}</p>
+                        <p>Status: ${item.status}</p>
+                        <p>Time: ${new Date(item.timestamp).toLocaleString()}</p>
+                    </div>
+                `).join('');
+                incidentContainer.innerHTML = incidentHTML;
+
+                // Clear existing incident layers
+                incidentsLayer.clearLayers();
+
+                // Add incident markers to the map
+                data.incidents.forEach(item => {
+                    const icon = L.divIcon({
+                        className: `incident-icon ${item.severity}`,
+                        html: '<i class="fas fa-exclamation-triangle"></i>',
+                        iconSize: [30, 30]
+                    });
+
+                    const marker = L.marker([item.lat, item.lng], { icon }).bindPopup(`
+                        <strong>${item.description}</strong><br>
+                        Type: ${item.type}<br>
+                        Status: ${item.status}<br>
+                        Time: ${new Date(item.timestamp).toLocaleString()}
+                    `);
+                    incidentsLayer.addLayer(marker);
+                });
+            } else {
+                incidentContainer.innerHTML = '<p>No current incidents</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching incident data:', error);
+            document.getElementById('incident-info').innerHTML = '<p>Error loading incident data</p>';
+        });
+}
+
+// Helper function to determine traffic severity color
+function getTrafficSeverityColor(severity) {
+    switch (severity.toLowerCase()) {
+        case 'high':
+            return '#ff4444';
+        case 'medium':
+            return '#ffbb33';
+        case 'low':
+            return '#00C851';
+        default:
+            return '#757575';
+    }
+}
+
+// Event listeners for layer toggles
+document.getElementById('traffic-layer').addEventListener('change', function(e) {
+    if (e.target.checked) {
+        updateTrafficInfo();
+        map.addLayer(trafficLayer);
+    } else {
+        map.removeLayer(trafficLayer);
+        document.getElementById('traffic-info').innerHTML = '<p>Traffic layer disabled</p>';
+    }
+});
+
+document.getElementById('roadwork-layer').addEventListener('change', function(e) {
+    if (e.target.checked) {
+        updateRoadworkInfo();
+        map.addLayer(roadworkLayer);
+    } else {
+        map.removeLayer(roadworkLayer);
+        document.getElementById('roadwork-info').innerHTML = '<p>Roadwork layer disabled</p>';
+    }
+});
+
+document.getElementById('incidents-layer').addEventListener('change', function(e) {
+    if (e.target.checked) {
+        updateIncidentInfo();
+        map.addLayer(incidentsLayer);
+    } else {
+        map.removeLayer(incidentsLayer);
+        document.getElementById('incident-info').innerHTML = '<p>Incidents layer disabled</p>';
+    }
+});
+
+// Add periodic updates (every 5 minutes)
+setInterval(() => {
+    if (document.getElementById('traffic-layer').checked) updateTrafficInfo();
+    if (document.getElementById('roadwork-layer').checked) updateRoadworkInfo();
+    if (document.getElementById('incidents-layer').checked) updateIncidentInfo();
+}, 300000); // 5 minutes in milliseconds
+
 function handleMapClick(e) {
   if (!isMeasuring) return;
 
@@ -322,6 +561,8 @@ function handleMapClick(e) {
   markers.push(marker);
   updateMeasurements();
 }
+
+
 
 function updateMeasurements() {
   if (polyline) {

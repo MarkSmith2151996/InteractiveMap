@@ -36,25 +36,27 @@
                 <div class="details-grid">
                     <div class="detail-item">
                         <i class="fas fa-map-marker-alt"></i>
-                        <span id="address"></span>
+                        <span id="address">No address selected</span>
                     </div>
                     <div class="detail-item">
                         <i class="fas fa-compass"></i>
-                        <span id="coordinates"></span>
+                        <span id="coordinates">No coordinates selected</span>
                     </div>
                     <div class="detail-item">
                         <i class="fas fa-road"></i>
-                        <span id="nearest-road"></span>
+                        <span id="nearest-road">No road information</span>
                     </div>
                     <div class="detail-item">
                         <i class="fas fa-building"></i>
-                        <span id="nearby-places"></span>
+                        <span id="nearby-places">No nearby places</span>
                     </div>
                 </div>
+                <!-- Add this div for location details -->
+                <div id="location-details"></div>
             </section>
         </div>
 
-        <!-- Search bar -->
+        <!-- Search Bar -->
         <div class="search-container">
             <input type="text" id="search-input" placeholder="Search for a location..." aria-label="Search location">
             <button id="search-btn" class="btn" aria-label="Search"><i class="fas fa-search"></i></button>
@@ -104,7 +106,20 @@
                     <span>Show Incidents</span>
                 </label>
             </div>
-            <div id="traffic-info" aria-live="polite"></div>
+            <div id="traffic-info" aria-live="polite">
+                <p id="traffic-update">No traffic data available yet.</p>
+            </div>
+            <div id="roadwork-info" aria-live="polite">
+                <p id="roadwork-update">No roadwork data available yet.</p>
+            </div>
+            <div id="incident-info" aria-live="polite">
+                <p id="incident-update">No incident data available yet.</p>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="status-container" class="status-container">
+            <div id="status-info" aria-live="polite" role="status"></div>
         </div>
     </div>
 
@@ -132,7 +147,6 @@
                     <i class="fas fa-trash"></i> Clear
                 </button>
             </div>
-            <div id="status-info" aria-live="polite" role="status"></div>
         </div>
     </main>
 
