@@ -29,10 +29,10 @@
     <div class="sidebar" aria-label="Tools and Information Panel">
         <!-- Location Details Container -->
         <div class="location-details-container">
-            <div class="location-header" id="location-header">
+            <header class="location-header" id="location-header">
                 <h3>Location Details <i class="fas fa-chevron-down"></i></h3>
-            </div>
-            <div class="location-content collapsed" id="location-content">
+            </header>
+            <section class="location-content collapsed" id="location-content">
                 <div class="details-grid">
                     <div class="detail-item">
                         <i class="fas fa-map-marker-alt"></i>
@@ -51,7 +51,7 @@
                         <span id="nearby-places"></span>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
 
         <!-- Search bar -->
@@ -141,6 +141,6 @@
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="/script.js"></script>
 </body>
 </html>
