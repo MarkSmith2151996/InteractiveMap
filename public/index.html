@@ -17,20 +17,37 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="sidebar" aria-label="Tools and Information Panel">
+        <!-- Search Bar -->
+        <div class="search-container">
+            <input 
+                type="text" 
+                id="search-input" 
+                placeholder="Search for a location..." 
+                aria-label="Search location"
+            >
+            <button id="search-btn" class="search-icon" aria-label="Search">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+
         <!-- Location Details Container -->
         <div class="location-details-container">
             <header class="location-header" id="location-header">
-                <h3>Location Details <i class="fas fa-chevron-down"></i></h3>
+                <h3>
+                    <i class="fas fa-map-marker-alt"></i>
+                    Location Details
+                    <i class="fas fa-chevron-down toggle-icon"></i>
+                </h3>
             </header>
             <section class="location-content collapsed" id="location-content">
                 <div class="details-grid">
@@ -46,34 +63,33 @@
                         <i class="fas fa-road"></i>
                         <span id="nearest-road">No road information</span>
                     </div>
-                    <div class="detail-item">
-                        <i class="fas fa-building"></i>
-                        <span id="nearby-places">No nearby places</span>
-                    </div>
                 </div>
-                <!-- Add this div for location details -->
                 <div id="location-details"></div>
             </section>
         </div>
 
-        <!-- Search Bar -->
-        <div class="search-container">
-            <input type="text" id="search-input" placeholder="Search for a location..." aria-label="Search location">
-            <button id="search-btn" class="btn" aria-label="Search"><i class="fas fa-search"></i></button>
-        </div>
-
         <!-- Navigation -->
-        <div class="navigation-container hidden" aria-label="Navigation Panel">
-            <h3>Navigation</h3>
+        <div class="navigation-container" aria-label="Navigation Panel">
+            <h3><i class="fas fa-route"></i> Navigation</h3>
             <form id="route-form">
                 <div class="navigation-inputs">
-                    <input type="text" id="route-start" placeholder="Starting point..." aria-label="Starting point">
-                    <input type="text" id="route-end" placeholder="Destination..." aria-label="Destination">
+                    <input 
+                        type="text" 
+                        id="route-start" 
+                        placeholder="Starting point..." 
+                        aria-label="Starting point"
+                    >
+                    <input 
+                        type="text" 
+                        id="route-end" 
+                        placeholder="Destination..." 
+                        aria-label="Destination"
+                    >
                 </div>
                 <select id="transport-mode" aria-label="Transport mode">
-                    <option value="driving">Drive</option>
-                    <option value="walking">Walk</option>
-                    <option value="cycling">Cycle</option>
+                    <option value="driving">🚗 Drive</option>
+                    <option value="walking">🚶 Walk</option>
+                    <option value="cycling">🚲 Cycle</option>
                 </select>
                 <button type="submit" id="get-directions" class="btn">
                     <i class="fas fa-directions"></i> Get Directions
@@ -83,17 +99,16 @@
         </div>
 
         <!-- Weather Information -->
-        <div class="weather-container hidden" aria-label="Weather Information">
-            <h3>Weather Information</h3>
+        <div class="weather-container" aria-label="Weather Information">
+            <h3><i class="fas fa-cloud-sun"></i> Weather Information</h3>
             <div id="current-weather" aria-live="polite"></div>
             <div id="weather-forecast" aria-live="polite"></div>
         </div>
 
-      
-
-        <!-- Status Messages -->
-        <div id="status-container" class="status-container">
-            <div id="status-info" aria-live="polite" role="status"></div>
+        <!-- Traffic Information -->
+        <div class="traffic-container hidden" aria-label="Traffic Information">
+            <h3><i class="fas fa-traffic-light"></i> Traffic Information</h3>
+            <div id="traffic-info" aria-live="polite"></div>
         </div>
     </div>
 
@@ -102,33 +117,110 @@
         
         <div class="controls" role="toolbar" aria-label="Map Controls">
             <div class="button-group">
-                <button id="toggle-navigation" class="btn" aria-label="Toggle Navigation Panel">
-                    <i class="fas fa-route"></i> Navigation
-                </button>
-                <button id="toggle-weather" class="btn" aria-label="Toggle Weather Panel">
-                    <i class="fas fa-cloud-sun"></i> Weather
-                </button>
-                <button id="toggle-traffic" class="btn" aria-label="Toggle Traffic Panel">
-                    <i class="fas fa-traffic-light"></i> Traffic
-                </button>
                 <button id="find-location" class="btn" aria-label="Find My Location">
-                    <i class="fas fa-location-arrow"></i> My Location
+                    <i class="fas fa-location-crosshairs"></i>
+                    <span>My Location</span>
                 </button>
                 <button id="measure-distance" class="btn" aria-label="Measure Distance">
-                    <i class="fas fa-ruler"></i> Measure
+                    <i class="fas fa-ruler"></i>
+                    <span>Measure</span>
                 </button>
-                <button id="clear-all" class="btn" aria-label="Clear Map">
-                    <i class="fas fa-trash"></i> Clear
+                <button id="toggle-traffic" class="btn" aria-label="Toggle Traffic Panel">
+                    <i class="fas fa-car"></i>
+                    <span>Traffic</span>
+                </button>
+                <button id="toggle-weather" class="btn" aria-label="Toggle Weather Panel">
+                    <i class="fas fa-cloud-sun"></i>
+                    <span>Weather</span>
+                </button>
+                <button id="clear-all" class="btn btn-danger" aria-label="Clear Map">
+                    <i class="fas fa-trash"></i>
+                    <span>Clear</span>
                 </button>
             </div>
         </div>
+
+        <!-- Status Information -->
+        <div id="status-container" class="status-container">
+            <div id="status-info" role="status" aria-live="polite"></div>
+        </div>
+
+        <!-- Context Menu -->
+        <div id="context-menu" class="context-menu hidden">
+            <ul>
+                <li id="set-start">
+                    <i class="fas fa-play"></i>
+                    Set as Start Point
+                </li>
+                <li id="set-end">
+                    <i class="fas fa-flag-checkered"></i>
+                    Set as Destination
+                </li>
+                <li id="add-marker">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Add Marker
+                </li>
+                <li id="measure-from-here">
+                    <i class="fas fa-ruler-combined"></i>
+                    Measure from Here
+                </li>
+            </ul>
+        </div>
     </main>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loader"></div>
+        <p>Loading map data...</p>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="error-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3><i class="fas fa-exclamation-circle"></i> Error</h3>
+            <p id="error-message"></p>
+            <button class="btn" onclick="closeErrorModal()">Close</button>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script type="module" src="/script.js"></script>
+    <script type="module" src="script.js"></script>
+
+    <!-- Additional Features Scripts -->
+    <script>
+        // Add smooth scrolling to all elements
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Add loading state to buttons
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('click', function() {
+                if (!this.classList.contains('btn-danger')) {
+                    this.classList.add('loading');
+                    setTimeout(() => this.classList.remove('loading'), 1000);
+                }
+            });
+        });
+
+        // Error modal functions
+        function showErrorModal(message) {
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-modal').classList.remove('hidden');
+        }
+
+        function closeErrorModal() {
+            document.getElementById('error-modal').classList.add('hidden');
+        }
+    </script>
 </body>
 </html>
