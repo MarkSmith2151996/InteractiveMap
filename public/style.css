@@ -301,6 +301,104 @@ body {
 .btn-danger:hover {
   background-color: #ee3445;
 }
+.route-instructions {
+  background-color: var(--background-color);
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin: 15px 0;
+  border-left: 4px solid var(--primary-color);
+}
+
+.route-instructions h4 {
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.instruction-steps {
+  padding-left: 25px;
+  margin: 10px 0;
+}
+
+.instruction-steps li {
+  margin: 8px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.waypoint-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.waypoint-btn {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.waypoint-btn i {
+  font-size: 18px;
+  margin-right: 10px;
+}
+
+.button-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.button-hint {
+  font-size: 11px;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.btn-success {
+  background-color: #28a745;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.btn-danger {
+  background-color: #dc3545;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+/* Active state for buttons */
+.waypoint-btn.active {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.2);
+  }
+  70% {
+      box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+  100% {
+      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
 
 /* Loading States */
 .btn.loading {
@@ -318,6 +416,28 @@ body {
   border-top-color: white;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+.waypoint-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn-success {
+  background-color: #28a745;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+/* Custom marker styles */
+.start-marker {
+  filter: hue-rotate(120deg); /* Makes the marker green */
+}
+
+.end-marker {
+  filter: hue-rotate(0deg); /* Keeps the marker red */
 }
 
 /* Context Menu */

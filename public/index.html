@@ -85,7 +85,33 @@
                         placeholder="Destination..." 
                         aria-label="Destination"
                     >
+                </form>
+                <div class="route-instructions">
+                    <h4><i class="fas fa-info-circle"></i> How to Set Route Points:</h4>
+                    <ol class="instruction-steps">
+                        <li>Click "Set Start Point" (green marker)</li>
+                        <li>Click on the map where you want to start</li>
+                        <li>Click "Set End Point" (red marker)</li>
+                        <li>Click on the map where you want to end</li>
+                    </ol>
                 </div>
+                <div class="waypoint-controls">
+                    <button type="button" id="set-start-point" class="btn btn-success waypoint-btn">
+                        <i class="fas fa-map-marker"></i> 
+                        <span class="button-text">
+                            Set Start Point
+                            <small class="button-hint">Click here, then click on map</small>
+                        </span>
+                    </button>
+                    <button type="button" id="set-end-point" class="btn btn-danger waypoint-btn">
+                        <i class="fas fa-flag"></i> 
+                        <span class="button-text">
+                            Set End Point
+                            <small class="button-hint">Click here, then click on map</small>
+                        </span>
+                    </button>
+                </div>
+            </div>
                 <select id="transport-mode" aria-label="Transport mode">
                     <option value="driving">🚗 Drive</option>
                     <option value="walking">🚶 Walk</option>

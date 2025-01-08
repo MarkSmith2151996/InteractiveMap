@@ -44,6 +44,10 @@ let routeCache = new Map();
 let locationCache = new Map();
 let weatherCache = new Map();
 let lastUpdateTime = new Map();
+let isSettingStart = false;
+let isSettingEnd = false;
+let startMarker = null;
+let endMarker = null;
 
 // Constants
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -150,6 +154,7 @@ async function initializeMap() {
         }).addTo(map);
 
         initializeRouting();
+        initializeWaypointControls();
         initializeEventListeners();
         initializeHeaderCollapse();
         
@@ -217,6 +222,101 @@ function initializeRouting() {
             lastUpdateTime.delete(oldestKey);
         }
     });
+}
+function initializeWaypointControls() {
+    const startButton = document.getElementById('set-start-point');
+    const endButton = document.getElementById('set-end-point');
+
+    startButton.addEventListener('click', () => {
+        isSettingStart = true;
+        isSettingEnd = false;
+        showStatus('Click on the map to set start point');
+    });
+
+    endButton.addEventListener('click', () => {
+        isSettingStart = false;
+        isSettingEnd = true;
+        showStatus('Click on the map to set end point');
+    });
+
+    map.on('click', handleWaypointClick);
+}
+
+function handleWaypointClick(e) {
+    if (!isSettingStart && !isSettingEnd) return;
+
+    const latlng = e.latlng;
+
+    if (isSettingStart) {
+        setStartPoint(latlng);
+        isSettingStart = false;
+    } else if (isSettingEnd) {
+        setEndPoint(latlng);
+        isSettingEnd = false;
+    }
+
+    updateRouteIfPossible();
+}
+
+function setStartPoint(latlng) {
+    if (startMarker) {
+        map.removeLayer(startMarker);
+    }
+
+    const greenIcon = L.icon({
+        ...customIcon.options,
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41]
+    });
+
+    startMarker = L.marker(latlng, { icon: greenIcon })
+        .addTo(map)
+        .bindPopup('Start Point')
+        .openPopup();
+
+    const startInput = document.getElementById('route-start');
+    if (startInput) {
+        startInput.value = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+    }
+
+    showStatus('Start point set');
+}
+
+function setEndPoint(latlng) {
+    if (endMarker) {
+        map.removeLayer(endMarker);
+    }
+
+    const redIcon = L.icon({
+        ...customIcon.options,
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41]
+    });
+
+    endMarker = L.marker(latlng, { icon: redIcon })
+        .addTo(map)
+        .bindPopup('End Point')
+        .openPopup();
+
+    const endInput = document.getElementById('route-end');
+    if (endInput) {
+        endInput.value = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+    }
+
+    showStatus('End point set');
+}
+
+function updateRouteIfPossible() {
+    if (startMarker && endMarker && routingControl) {
+        const waypoints = [
+            L.latLng(startMarker.getLatLng()),
+            L.latLng(endMarker.getLatLng())
+        ];
+        routingControl.setWaypoints(waypoints);
+        showStatus('Calculating route...');
+    }
 }
 
 // Route calculation
@@ -472,16 +572,36 @@ async function searchLocation() {
         showError('Error searching for location');
     }
 }
+function initializeMeasurement() {
+    // Add measurement control to map
+    const measureControl = L.control({position: 'topleft'});
+    
+    measureControl.onAdd = function(map) {
+        const div = L.DomUtil.create('div', 'measurement-instructions leaflet-bar leaflet-control');
+        div.style.display = 'none';
+        div.innerHTML = `
+            <div class="measure-info">
+                <p>Click on map to start measuring</p>
+                <p>Press ESC to cancel</p>
+                <p>Double click to finish</p>
+            </div>
+        `;
+        return div;
+    };
+    
+    measureControl.addTo(map);
+}
 
 // Measurement functionality
 function handleMapClick(e) {
     if (!isMeasuring) return;
 
     const point = e.latlng;
-    measurePoints.push(point);
+    currentMeasurement.points.push(point);
 
+    // Create custom marker with measurement information
     const marker = L.marker(point, {
-        icon: customIcon,
+        icon: createMeasureMarker(currentMeasurement.points.length),
         draggable: true,
         bubblingMouseEvents: false
     })
@@ -491,11 +611,31 @@ function handleMapClick(e) {
             removeMeasurePoint(this);
         }
     })
-    .on('dragend', debounce(updateMeasurements, DEBOUNCE_DELAY));
+    .on('dragstart', function() {
+        map.off('mousemove', updateMeasureTooltip);
+    })
+    .on('dragend', function(event) {
+        const index = currentMeasurement.markers.indexOf(this);
+        if (index > -1) {
+            currentMeasurement.points[index] = event.target.getLatLng();
+            updateMeasurements();
+            map.on('mousemove', updateMeasureTooltip);
+        }
+    });
 
-    markers.push(marker);
+    currentMeasurement.markers.push(marker);
     updateMeasurements();
 }
+
+function createMeasureMarker(pointNumber) {
+    return L.divIcon({
+        className: 'measure-marker',
+        html: `<div class="measure-marker-point">${pointNumber}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+    });
+}
+
 
 function updateMeasurements() {
     if (polyline && polyline._map) {
@@ -624,6 +764,20 @@ function clearMap() {
         map.removeLayer(measureTooltip);
         measureTooltip = null;
     }
+
+    // Clear waypoint markers
+    if (startMarker) {
+        map.removeLayer(startMarker);
+        startMarker = null;
+    }
+    if (endMarker) {
+        map.removeLayer(endMarker);
+        endMarker = null;
+    }
+    
+    // Reset waypoint states
+    isSettingStart = false;
+    isSettingEnd = false;
     
     isMeasuring = false;
     document.getElementById('measure-distance')?.classList.remove('active');
