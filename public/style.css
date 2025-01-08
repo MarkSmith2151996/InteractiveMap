@@ -140,54 +140,6 @@ body {
   color: #5f6368;
 }
 
-/* Enhanced Traffic Styles */
-.traffic-container {
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-}
-
-.traffic-info {
-  background-color: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.traffic-status {
-  padding: 15px;
-  border-radius: 6px;
-  margin-bottom: 10px;
-}
-
-.traffic-status h4 {
-  margin-bottom: 10px;
-  color: #202124;
-}
-
-.traffic-status.light {
-  background-color: #e8f5e9;
-}
-
-.traffic-status.moderate {
-  background-color: #fff3e0;
-}
-
-.traffic-status.heavy {
-  background-color: #ffebee;
-}
-
-.traffic-status p {
-  margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.traffic-status span {
-  font-weight: 500;
-}
 
 .warning {
   color: #d32f2f;

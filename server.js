@@ -12,71 +12,10 @@ app.use(express.static('public'));
 app.use(express.json());
 
 // Mock data
-const mockTrafficData = {
-    traffic: [
-        {
-            id: 1,
-            description: "Heavy traffic on Main Street",
-            severity: "high",
-            location: "Main Street",
-            speed: 25,
-            delay: 15
-        },
-        {
-            id: 2,
-            description: "Normal flow on Highway 1",
-            severity: "low",
-            location: "Highway 1",
-            speed: 65,
-            delay: 0
-        }
-    ]
-};
 
-const mockRoadworkData = {
-    roadwork: [
-        {
-            id: 1,
-            description: "Road repairs on Oak Avenue",
-            startDate: "2024-01-07",
-            endDate: "2024-01-14",
-            status: "ongoing",
-            impact: "moderate"
-        },
-        {
-            id: 2,
-            description: "Bridge maintenance on River Road",
-            startDate: "2024-01-10",
-            endDate: "2024-01-20",
-            status: "scheduled",
-            impact: "high"
-        }
-    ]
-};
-
-const mockIncidentsData = {
-    incidents: [
-        {
-            id: 1,
-            description: "Minor accident on Pine Street",
-            type: "accident",
-            severity: "low",
-            timestamp: "2024-01-07T10:30:00",
-            status: "cleared"
-        },
-        {
-            id: 2,
-            description: "Vehicle breakdown on Cedar Lane",
-            type: "breakdown",
-            severity: "medium",
-            timestamp: "2024-01-07T11:15:00",
-            status: "active"
-        }
-    ]
-};
 
 // Validate environment variables
-const requiredEnvVars = ['OPENCAGE_API_KEY', 'WEATHER_API_KEY', 'TOMTOM_TRAFFIC_API_KEY', 'PLACES_API_KEY'];
+const requiredEnvVars = ['OPENCAGE_API_KEY', 'WEATHER_API_KEY', 'TOMTOM_TRAFFIC_API_KEY'];
 requiredEnvVars.forEach(varName => {
     if (!process.env[varName]) {
         console.error(`Missing required environment variable: ${varName}`);
@@ -184,50 +123,7 @@ app.get('/api/weather', async (req, res) => {
 });
 
 // Updated Traffic endpoint with mock data fallback
-app.get('/api/traffic', async (req, res) => {
-    try {
-        const { lat, lon } = req.query;
 
-        if (!lat || !lon) {
-            return res.json(mockTrafficData);
-        }
-
-        const response = await axios.get('https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json', {
-            params: {
-                point: `${lat},${lon}`,
-                key: process.env.TOMTOM_TRAFFIC_API_KEY
-            }
-        });
-
-        console.log('Traffic API response:', response.data);
-
-        const flowData = response.data.flowSegmentData;
-
-        res.json({
-            currentSpeed: flowData.currentSpeed,
-            freeFlowSpeed: flowData.freeFlowSpeed,
-            currentTravelTime: flowData.currentTravelTime,
-            freeFlowTravelTime: flowData.freeFlowTravelTime,
-            confidence: flowData.confidence,
-            roadClosure: flowData.roadClosure,
-            coordinates: flowData.coordinates
-        });
-    } catch (error) {
-        console.error('Traffic endpoint error:', error.response?.data || error.message);
-        // Fallback to mock data on error
-        res.json(mockTrafficData);
-    }
-});
-
-// Updated Roadwork endpoint with mock data
-app.get('/api/roadwork', (req, res) => {
-    res.json(mockRoadworkData);
-});
-
-// Updated Incidents endpoint with mock data
-app.get('/api/incidents', (req, res) => {
-    res.json(mockIncidentsData);
-});
 
 // New endpoint: Nearby Places
 app.get('/api/nearby', async (req, res) => {
