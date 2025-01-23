@@ -1,9 +1,11 @@
+//script.js
 import { 
     initializeLocationDetails, 
     initializePOISearch, 
     updateLocationInfo, 
     routeToPOI 
 } from '/locationServices.js';
+import { locateUser } from './location.js';
 
 // Utility functions for debounce/throttle since we don't have direct lodash access
 function debounce(func, wait) {
@@ -31,6 +33,7 @@ function throttle(func, limit) {
     };
 }
 
+
 // Global variables with proper typing
 let map;
 let markers = [];
@@ -48,6 +51,13 @@ let isSettingStart = false;
 let isSettingEnd = false;
 let startMarker = null;
 let endMarker = null;
+let currentMeasurement = {
+    points: [],
+    markers: []
+};
+
+
+
 
 // Constants
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -66,30 +76,61 @@ const customIcon = L.icon({
 });
 
 // Utility functions
+// Modified status functions
 function showError(message, duration = 3000) {
     const statusInfo = document.getElementById('status-info');
-    if (statusInfo) {
-        statusInfo.textContent = message;
-        statusInfo.classList.add('error');
-        if (duration > 0) {
-            setTimeout(() => {
-                statusInfo.textContent = '';
-                statusInfo.classList.remove('error');
-            }, duration);
-        }
+    if (!statusInfo) {
+        console.error('Status element not found');
+        return;
+    }
+    
+    statusInfo.textContent = message;
+    statusInfo.classList.add('error', 'active');
+    
+    if (duration > 0) {
+        setTimeout(() => {
+            statusInfo.textContent = '';
+            statusInfo.classList.remove('error', 'active');
+        }, duration);
     }
 }
 
 function showStatus(message, duration = 3000) {
     const statusInfo = document.getElementById('status-info');
-    if (statusInfo) {
-        statusInfo.textContent = message;
-        statusInfo.classList.remove('error');
-        if (duration > 0) {
+    if (!statusInfo) {
+        console.error('Status element not found');
+        return;
+    }
+    
+    // Clear any existing messages and animations
+    statusInfo.innerHTML = '';
+    statusInfo.className = 'status-message';
+    
+    const messageElement = document.createElement('div');
+    messageElement.textContent = message;
+    messageElement.className = 'fade-message';
+    statusInfo.appendChild(messageElement);
+    
+    if (duration > 0) {
+        setTimeout(() => {
+            messageElement.style.opacity = '0';
             setTimeout(() => {
-                statusInfo.textContent = '';
-            }, duration);
-        }
+                if (statusInfo.contains(messageElement)) {
+                    statusInfo.removeChild(messageElement);
+                }
+            }, 500); // Wait for fade animation to complete
+        }, duration);
+    }
+}
+function initializeStatusElement() {
+    // Check if status container already exists
+    if (!document.getElementById('status-container')) {
+        // Create a temporary container
+        const temp = document.createElement('div');
+        temp.innerHTML = statusHtml;
+        
+        // Insert the status container into the document
+        document.body.insertBefore(temp.firstElementChild, document.body.firstChild);
     }
 }
 
@@ -99,7 +140,15 @@ function updateLocationDisplay(coordinates) {
     
     const locationDetailsElement = document.getElementById('location-details');
     if (locationDetailsElement) {
-        locationDetailsElement.innerHTML = `Latitude: ${coordinates.lat?.toFixed(4)}, Longitude: ${coordinates.lon?.toFixed(4)}`;
+        locationDetailsElement.innerHTML = `
+            <div class="location-header">
+                <h3>Approximate Location Details</h3>
+            </div>
+            <div class="location-coords">
+                Latitude: ${coordinates.lat?.toFixed(4)}, 
+                Longitude: ${coordinates.lon?.toFixed(4)}
+            </div>
+        `;
     }
 }
 
@@ -122,8 +171,12 @@ async function initializeMap() {
         if (cachedConfig) {
             config = JSON.parse(cachedConfig);
         } else {
-            const response = await fetch('/api/config');
-            config = await response.json();
+            config = {
+                mapConfig: {
+                    initialView: [51.505, -0.09],
+                    zoom: 13
+                }
+            };
             sessionStorage.setItem('mapConfig', JSON.stringify(config));
         }
 
@@ -140,10 +193,6 @@ async function initializeMap() {
             zoomAnimation: true
         }).setView(config.mapConfig.initialView, config.mapConfig.zoom);
 
-        // Add map move handlers
-        map.on('moveend', handleMapMoveEnd);
-        map.on('zoomend', handleMapMoveEnd);
-
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
             maxZoom: 19,
@@ -153,10 +202,15 @@ async function initializeMap() {
             maxAge: 24 * 60 * 60 * 1000
         }).addTo(map);
 
+        // Add map move handlers
+        map.on('moveend', handleMapMoveEnd);
+        map.on('zoomend', handleMapMoveEnd);
+
+        // Initialize components
         initializeRouting();
         initializeWaypointControls();
         initializeEventListeners();
-        initializeHeaderCollapse();
+        initializeMeasurement();
         
         const debouncedMapClick = debounce(handleMapClick, DEBOUNCE_DELAY);
         const debouncedMeasureTooltip = debounce(updateMeasureTooltip, 50);
@@ -164,9 +218,12 @@ async function initializeMap() {
         map.on('click', debouncedMapClick);
         map.on('mousemove', debouncedMeasureTooltip);
 
+        return map;
+
     } catch (error) {
         console.error('Map initialization error:', error);
         showError('Failed to initialize map');
+        throw error;
     }
 }
 
@@ -358,117 +415,8 @@ async function calculateRoute(startLocation, endLocation) {
 }
 
 // Location handling
-function locateUser() {
-    if (!map) {
-        showError('Map not initialized');
-        return;
-    }
+// Location handling
 
-    if (navigator.geolocation) {
-        showStatus('Locating...');
-        map.locate({
-            setView: true,
-            maxZoom: 16,
-            watch: true,
-            enableHighAccuracy: true
-        });
-
-        map.on('locationfound', handleLocationFound);
-        map.on('locationerror', () => showError('Location access denied or unavailable.'));
-    } else {
-        showError('Geolocation is not supported by this browser.');
-    }
-}
-
-function handleLocationFound(e) {
-    markers = markers.filter(marker => {
-        if (marker.isUserLocation) {
-            map.removeLayer(marker);
-            return false;
-        }
-        return true;
-    });
-
-    const marker = L.marker(e.latlng, {
-        icon: customIcon,
-        bubblingMouseEvents: false
-    }).addTo(map);
-    
-    marker.isUserLocation = true;
-    markers.push(marker);
-
-    Promise.all([
-        reverseGeocode(e.latlng.lat, e.latlng.lng),
-        updateLocationInfo(e.latlng.lat, e.latlng.lng),
-        getWeather(e.latlng.lat, e.latlng.lng)
-    ]).then(() => {
-        showStatus('Location found!');
-        marker.bindPopup('Your current location').openPopup();
-    });
-}
-
-// Geocoding
-async function getCachedGeocode(location) {
-    const cachedLocation = locationCache.get(location);
-    const lastUpdate = lastUpdateTime.get(location);
-    
-    if (cachedLocation && lastUpdate && (Date.now() - lastUpdate < CACHE_DURATION)) {
-        return cachedLocation;
-    }
-
-    try {
-        const response = await fetch(`/api/geocode?q=${encodeURIComponent(location)}`);
-        if (!response.ok) throw new Error('Geocoding failed');
-        
-        const data = await response.json();
-        if (data.geometry) {
-            locationCache.set(location, data.geometry);
-            lastUpdateTime.set(location, Date.now());
-            
-            if (locationCache.size > MAX_CACHE_SIZE) {
-                const oldestKey = [...lastUpdateTime.entries()]
-                    .sort((a, b) => a[1] - b[1])[0][0];
-                locationCache.delete(oldestKey);
-                lastUpdateTime.delete(oldestKey);
-            }
-            
-            return data.geometry;
-        }
-        throw new Error('No geometry in response');
-    } catch (error) {
-        console.error('Geocoding error:', error);
-        throw error;
-    }
-}
-
-async function reverseGeocode(lat, lon) {
-    const cacheKey = `${lat},${lon}`;
-    const cachedAddress = locationCache.get(cacheKey);
-    const lastUpdate = lastUpdateTime.get(cacheKey);
-    
-    if (cachedAddress && lastUpdate && (Date.now() - lastUpdate < CACHE_DURATION)) {
-        updateAddressDisplay(cachedAddress);
-        return cachedAddress;
-    }
-
-    try {
-        const response = await fetch(`/api/geocode?lat=${lat}&lon=${lon}`);
-        if (!response.ok) throw new Error('Reverse geocoding failed');
-        
-        const data = await response.json();
-        if (data.address) {
-            locationCache.set(cacheKey, data.address);
-            lastUpdateTime.set(cacheKey, Date.now());
-            updateAddressDisplay(data.address);
-            return data.address;
-        }
-        throw new Error('No address in response');
-    } catch (error) {
-        console.error('Reverse geocoding error:', error);
-        showError('Error retrieving address');
-        throw error;
-    }
-}
 
 function updateAddressDisplay(address) {
     const addressElement = document.getElementById('address');
@@ -483,51 +431,140 @@ async function getWeather(lat, lon) {
     const cachedWeather = weatherCache.get(cacheKey);
     const lastUpdate = lastUpdateTime.get(cacheKey);
     
+    // Check cache validity and age
     if (cachedWeather && lastUpdate && (Date.now() - lastUpdate < CACHE_DURATION)) {
+        console.log('Using cached weather data');
         updateWeatherDisplay(cachedWeather);
         return cachedWeather;
     }
 
     try {
+        showStatus('Fetching weather information...');
         const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
-        if (!response.ok) throw new Error('Weather request failed');
+        
+        if (!response.ok) {
+            throw new Error(`Weather request failed: ${response.status}`);
+        }
         
         const data = await response.json();
-        if (data.weather) {
-            weatherCache.set(cacheKey, data.weather);
-            lastUpdateTime.set(cacheKey, Date.now());
-            updateWeatherDisplay(data.weather);
-            return data.weather;
+        
+        if (!data || !data.weather) {
+            throw new Error('Invalid weather data received');
         }
-        throw new Error('No weather data in response');
+
+        // Format weather data for consistency
+        const weatherData = {
+            temperature: data.weather.main?.temp ?? data.weather.temperature,
+            description: data.weather.weather?.[0]?.description ?? data.weather.description,
+            icon: data.weather.weather?.[0]?.icon ?? data.weather.icon,
+            humidity: data.weather.main?.humidity ?? data.weather.humidity,
+            windSpeed: data.weather.wind?.speed ?? data.weather.windSpeed,
+            feelsLike: data.weather.main?.feels_like,
+            pressure: data.weather.main?.pressure
+        };
+
+        // Update cache
+        weatherCache.set(cacheKey, weatherData);
+        lastUpdateTime.set(cacheKey, Date.now());
+
+        // Clean up old cache entries
+        if (weatherCache.size > MAX_CACHE_SIZE) {
+            const oldestKey = [...lastUpdateTime.entries()]
+                .sort((a, b) => a[1] - b[1])[0][0];
+            weatherCache.delete(oldestKey);
+            lastUpdateTime.delete(oldestKey);
+        }
+
+        updateWeatherDisplay(weatherData);
+        showStatus('Weather information updated');
+        return weatherData;
+
     } catch (error) {
         console.error('Weather fetch error:', error);
-        showError('Weather information unavailable');
-        throw error;
+        showError('Unable to fetch weather information');
+        return null;
+    }
+}
+
+async function getDetailedWeather(lat, lon) {
+    try {
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=YOUR_API_KEY`);
+        if (!response.ok) throw new Error(`Weather API error: ${response.status}`);
+        
+        const data = await response.json();
+        return {
+            temperature: data.main.temp,
+            feelsLike: data.main.feels_like,
+            humidity: data.main.humidity,
+            windSpeed: data.wind.speed,
+            description: data.weather[0].description,
+            icon: data.weather[0].icon,
+            pressure: data.main.pressure,
+            sunrise: new Date(data.sys.sunrise * 1000).toLocaleTimeString(),
+            sunset: new Date(data.sys.sunset * 1000).toLocaleTimeString()
+        };
+    } catch (error) {
+        console.error('Detailed weather fetch error:', error);
+        showError('Unable to fetch detailed weather information');
+        return null;
     }
 }
 
 function updateWeatherDisplay(weather) {
+    if (!weather) return;
+
     const weatherContainer = document.getElementById('current-weather');
-    if (weatherContainer) {
+    if (!weatherContainer) {
+        console.error('Weather container element not found');
+        return;
+    }
+
+    try {
+        // Convert wind speed from m/s to km/h
+        const windSpeedKmh = (weather.windSpeed * 3.6).toFixed(1);
+        
+        // Generate sunrise/sunset HTML if the data exists
+        const sunTimes = weather.sunrise && weather.sunset ? `
+            <div class="sun-times">
+                <p><i class="fas fa-sunrise"></i> Sunrise: ${weather.sunrise}</p>
+                <p><i class="fas fa-sunset"></i> Sunset: ${weather.sunset}</p>
+            </div>
+        ` : '';
+
         weatherContainer.innerHTML = `
-            <div class="weather-info">
-                <img 
-                    src="https://openweathermap.org/img/wn/${weather.icon}@2x.png"
-                    alt="${weather.description}"
-                    class="weather-icon"
-                    loading="lazy"
-                />
+            <div class="weather-card">
+                <div class="weather-header">
+                    <img 
+                        src="https://openweathermap.org/img/wn/${weather.icon}@2x.png"
+                        alt="${weather.description}"
+                        class="weather-icon"
+                        width="80"
+                        height="80"
+                        loading="lazy"
+                    />
+                    <div class="weather-main">
+                        <h4>${Math.round(weather.temperature)}°C</h4>
+                        <p class="feels-like">Feels like: ${Math.round(weather.feelsLike || weather.temperature)}°C</p>
+                    </div>
+                </div>
                 <div class="weather-details">
-                    <p class="temperature">${Math.round(weather.temperature)}°C</p>
-                    <p class="description">${weather.description}</p>
-                    <p class="humidity">Humidity: ${weather.humidity}%</p>
-                    <p class="wind">Wind Speed: ${weather.windSpeed} m/s</p>
+                    <p class="description"><i class="fas fa-cloud"></i> ${weather.description}</p>
+                    <p class="humidity"><i class="fas fa-tint"></i> Humidity: ${weather.humidity}%</p>
+                    <p class="wind"><i class="fas fa-wind"></i> Wind: ${windSpeedKmh} km/h</p>
+                    ${weather.pressure ? `<p class="pressure"><i class="fas fa-compress-arrows-alt"></i> Pressure: ${weather.pressure} hPa</p>` : ''}
+                    ${sunTimes}
                 </div>
             </div>
         `;
+
+        const weatherContainerParent = document.querySelector('.weather-container');
+        if (weatherContainerParent) {
+            weatherContainerParent.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error updating weather display:', error);
+        showError('Error displaying weather information');
     }
-    document.querySelector('.weather-container')?.classList.remove('hidden');
 }
 
 // Search functionality
@@ -570,6 +607,44 @@ async function searchLocation() {
     } catch (error) {
         console.error('Search error:', error);
         showError('Error searching for location');
+    }
+}
+
+async function getCachedGeocode(location) {
+    const cachedLocation = locationCache.get(location);
+    const lastUpdate = lastUpdateTime.get(location);
+    
+    if (cachedLocation && lastUpdate && (Date.now() - lastUpdate < CACHE_DURATION)) {
+        return cachedLocation;
+    }
+
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`);
+        if (!response.ok) throw new Error('Geocoding failed');
+        
+        const data = await response.json();
+        if (data && data[0]) {
+            const geometry = {
+                lat: parseFloat(data[0].lat),
+                lon: parseFloat(data[0].lon)
+            };
+            
+            locationCache.set(location, geometry);
+            lastUpdateTime.set(location, Date.now());
+            
+            if (locationCache.size > MAX_CACHE_SIZE) {
+                const oldestKey = [...lastUpdateTime.entries()]
+                    .sort((a, b) => a[1] - b[1])[0][0];
+                locationCache.delete(oldestKey);
+                lastUpdateTime.delete(oldestKey);
+            }
+            
+            return geometry;
+        }
+        throw new Error('No geometry in response');
+    } catch (error) {
+        console.error('Geocoding error:', error);
+        throw error;
     }
 }
 function initializeMeasurement() {
@@ -789,9 +864,9 @@ function initializeEventListeners() {
     const debouncedSearch = debounce(searchLocation, DEBOUNCE_DELAY);
     const debouncedRoute = debounce((start, end) => calculateRoute(start, end), DEBOUNCE_DELAY);
 
-    // Button click handlers with improved event delegation
+    // Button click handlers with improved event delegation and map passing
     const buttonHandlers = {
-        'find-location': locateUser,
+        'find-location': () => locateUser(map),  // Changed this line
         'search-btn': debouncedSearch,
         'clear-all': clearMap,
         'measure-distance': toggleMeasuring
@@ -858,7 +933,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         initializeMap,
         calculateRoute,
-        locateUser,
+        locateUser: () => locateUser(map), // Changed this line
         searchLocation,
         toggleMeasuring,
         clearMap,

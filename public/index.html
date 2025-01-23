@@ -1,19 +1,16 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="description" content="Interactive map application with weather, traffic, and navigation features">
+    <meta name="description" content="Interactive map application with weather and navigation features">
     <title>Enhanced Interactive Map</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    
-    <!-- Leaflet Routing Machine CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-    
-    <!-- Leaflet Control Geocoder CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     
     <!-- Google Fonts -->
@@ -40,34 +37,6 @@
             </button>
         </div>
 
-        <!-- Location Details Container -->
-        <div class="location-details-container">
-            <header class="location-header" id="location-header">
-                <h3>
-                    <i class="fas fa-map-marker-alt"></i>
-                    Location Details
-                    <i class="fas fa-chevron-down toggle-icon"></i>
-                </h3>
-            </header>
-            <section class="location-content collapsed" id="location-content">
-                <div class="details-grid">
-                    <div class="detail-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span id="address">No address selected</span>
-                    </div>
-                    <div class="detail-item">
-                        <i class="fas fa-compass"></i>
-                        <span id="coordinates">No coordinates selected</span>
-                    </div>
-                    <div class="detail-item">
-                        <i class="fas fa-road"></i>
-                        <span id="nearest-road">No road information</span>
-                    </div>
-                </div>
-                <div id="location-details"></div>
-            </section>
-        </div>
-
         <!-- Navigation -->
         <div class="navigation-container" aria-label="Navigation Panel">
             <h3><i class="fas fa-route"></i> Navigation</h3>
@@ -85,7 +54,7 @@
                         placeholder="Destination..." 
                         aria-label="Destination"
                     >
-                </form>
+                </div>
                 <div class="route-instructions">
                     <h4><i class="fas fa-info-circle"></i> How to Set Route Points:</h4>
                     <ol class="instruction-steps">
@@ -111,7 +80,6 @@
                         </span>
                     </button>
                 </div>
-            </div>
                 <select id="transport-mode" aria-label="Transport mode">
                     <option value="driving">🚗 Drive</option>
                     <option value="walking">🚶 Walk</option>
@@ -124,17 +92,31 @@
             <div id="route-info" aria-live="polite"></div>
         </div>
 
-        <!-- Weather Information -->
-        <div class="weather-container" aria-label="Weather Information">
-            <h3><i class="fas fa-cloud-sun"></i> Weather Information</h3>
-            <div id="current-weather" aria-live="polite"></div>
-            <div id="weather-forecast" aria-live="polite"></div>
-        </div>
-
-        <!-- Traffic Information -->
-        <div class="traffic-container hidden" aria-label="Traffic Information">
-            <h3><i class="fas fa-traffic-light"></i> Traffic Information</h3>
-            <div id="traffic-info" aria-live="polite"></div>
+        <!-- Enhanced Weather Information -->
+        <div class="weather-container hidden" aria-label="Weather Information">
+            <div class="weather-header">
+                <h3><i class="fas fa-cloud-sun"></i> Weather Information</h3>
+                <button id="refresh-weather" class="btn-icon" aria-label="Refresh weather">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            <div class="weather-content">
+                <div id="current-weather" aria-live="polite">
+                    <!-- Weather card will be inserted here -->
+                </div>
+                <div class="weather-forecast-container">
+                    <h4><i class="fas fa-clock"></i> Hourly Forecast</h4>
+                    <div id="weather-forecast" class="forecast-scroll" aria-live="polite">
+                        <!-- Hourly forecast cards will be inserted here -->
+                    </div>
+                </div>
+                <div class="weather-details-container">
+                    <h4><i class="fas fa-list"></i> Additional Details</h4>
+                    <div id="weather-details" aria-live="polite">
+                        <!-- Additional weather details will be inserted here -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -151,14 +133,6 @@
                     <i class="fas fa-ruler"></i>
                     <span>Measure</span>
                 </button>
-                <button id="toggle-traffic" class="btn" aria-label="Toggle Traffic Panel">
-                    <i class="fas fa-car"></i>
-                    <span>Traffic</span>
-                </button>
-                <button id="toggle-weather" class="btn" aria-label="Toggle Weather Panel">
-                    <i class="fas fa-cloud-sun"></i>
-                    <span>Weather</span>
-                </button>
                 <button id="clear-all" class="btn btn-danger" aria-label="Clear Map">
                     <i class="fas fa-trash"></i>
                     <span>Clear</span>
@@ -166,30 +140,20 @@
             </div>
         </div>
 
-        <!-- Status Information -->
         <div id="status-container" class="status-container">
-            <div id="status-info" role="status" aria-live="polite"></div>
+            <div id="status-info" role="status" aria-live="polite">
+                <span id="improving-accuracy" class="fade-text">Improving accuracy...</span>
+                <span id="approximate-location" class="fade-text hidden">Approximate location</span>
+            </div>
         </div>
 
-        <!-- Context Menu -->
         <div id="context-menu" class="context-menu hidden">
             <ul>
-                <li id="set-start">
-                    <i class="fas fa-play"></i>
-                    Set as Start Point
-                </li>
-                <li id="set-end">
-                    <i class="fas fa-flag-checkered"></i>
-                    Set as Destination
-                </li>
-                <li id="add-marker">
-                    <i class="fas fa-map-marker-alt"></i>
-                    Add Marker
-                </li>
-                <li id="measure-from-here">
-                    <i class="fas fa-ruler-combined"></i>
-                    Measure from Here
-                </li>
+                <li id="set-start"><i class="fas fa-play"></i> Set as Start Point</li>
+                <li id="set-end"><i class="fas fa-flag-checkered"></i> Set as Destination</li>
+                <li id="add-marker"><i class="fas fa-map-marker-alt"></i> Add Marker</li>
+                <li id="measure-from-here"><i class="fas fa-ruler-combined"></i> Measure from Here</li>
+                <li id="get-weather-here"><i class="fas fa-cloud-sun"></i> Get Weather Here</li>
             </ul>
         </div>
     </main>
@@ -218,7 +182,6 @@
 
     <!-- Additional Features Scripts -->
     <script>
-        // Add smooth scrolling to all elements
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -228,7 +191,6 @@
             });
         });
 
-        // Add loading state to buttons
         document.querySelectorAll('.btn').forEach(button => {
             button.addEventListener('click', function() {
                 if (!this.classList.contains('btn-danger')) {
@@ -238,7 +200,6 @@
             });
         });
 
-        // Error modal functions
         function showErrorModal(message) {
             document.getElementById('error-message').textContent = message;
             document.getElementById('error-modal').classList.remove('hidden');
@@ -247,6 +208,27 @@
         function closeErrorModal() {
             document.getElementById('error-modal').classList.add('hidden');
         }
+        function handleLocationStatus() {
+    const improvingAccuracy = document.getElementById('improving-accuracy');
+    const approximateLocation = document.getElementById('approximate-location');
+    
+    // Show "Improving accuracy..." first
+    improvingAccuracy.classList.remove('hidden');
+    
+    // After 3 seconds, hide "Improving accuracy..." and show "Approximate location"
+    setTimeout(() => {
+        improvingAccuracy.classList.add('hidden');
+        approximateLocation.classList.remove('hidden');
+        
+        // After another 3 seconds, hide "Approximate location"
+        setTimeout(() => {
+            approximateLocation.classList.add('hidden');
+        }, 3000);
+    }, 3000);
+}
+
+
+document.getElementById('find-location').addEventListener('click', handleLocationStatus);
     </script>
 </body>
 </html>

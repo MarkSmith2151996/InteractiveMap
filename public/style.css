@@ -1,3 +1,4 @@
+/* styles.css */
 :root {
   --primary-color: #4A90E2;
   --secondary-color: #2C3E50;
@@ -6,6 +7,10 @@
   --card-background: #FFFFFF;
   --text-primary: #2C3E50;
   --text-secondary: #7F8C8D;
+  --danger-color: #ff4757;
+  --success-color: #28a745;
+  --warning-color: #ffa502;
+  --info-color: #70a1ff;
   --shadow-light: 0 2px 10px rgba(0,0,0,0.08);
   --shadow-medium: 0 4px 20px rgba(0,0,0,0.12);
   --border-radius: 12px;
@@ -27,7 +32,7 @@ body {
   color: var(--text-primary);
 }
 
-/* Enhanced Sidebar Styles */
+/* Layout Components */
 .sidebar {
   width: 380px;
   background-color: var(--card-background);
@@ -39,9 +44,29 @@ body {
   overflow-y: auto;
   height: 100vh;
   position: relative;
+  z-index: 1000;
 }
 
-/* Modern Search Bar */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 24px;
+  gap: 20px;
+  position: relative;
+}
+
+/* Map Container */
+#map {
+  flex: 1;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-medium);
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Search Components */
 .search-container {
   position: relative;
   margin-bottom: 20px;
@@ -80,69 +105,62 @@ body {
   transition: var(--transition);
 }
 
-#search-input:focus + .search-icon {
-  color: var(--primary-color);
+/* Enhanced Search Control */
+.search-control {
+  background: none;
+  border: none;
 }
 
-/* Location Details Container */
-.location-details-container {
-  background-color: var(--background-color);
-  border-radius: var(--border-radius);
-  overflow: hidden;
+.search-wrapper {
+  position: relative;
+  width: 250px;
+}
+
+#location-search {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  transition: var(--transition);
+}
+
+#location-search:focus {
+  outline: none;
+  border-color: var(--primary-color);
   box-shadow: var(--shadow-light);
 }
 
-.location-header {
-  padding: 20px;
-  background-color: var(--card-background);
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 4px;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: var(--shadow-light);
+}
+
+.search-result {
+  padding: 8px 12px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   transition: var(--transition);
 }
 
-.location-header:hover {
-  background-color: var(--background-color);
+.search-result:hover {
+  background: var(--background-color);
 }
 
-.location-header h3 {
-  font-size: 18px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.location-content {
-  padding: 20px;
-  background-color: var(--card-background);
-}
-
-.details-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  background-color: var(--background-color);
-  border-radius: var(--border-radius);
-  transition: var(--transition);
-}
-
-.detail-item:hover {
-  transform: translateX(5px);
-  box-shadow: var(--shadow-light);
-}
-
-.detail-item i {
-  color: var(--primary-color);
-  font-size: 18px;
-}
-
-/* Navigation Container */
+/* Navigation Components */
 .navigation-container {
   background-color: var(--card-background);
   border-radius: var(--border-radius);
@@ -172,6 +190,7 @@ body {
   background-color: var(--card-background);
 }
 
+/* Transport Mode Select */
 #transport-mode {
   width: 100%;
   padding: 14px;
@@ -184,123 +203,7 @@ body {
   transition: var(--transition);
 }
 
-/* Weather Container */
-.weather-container {
-  background-color: var(--card-background);
-  border-radius: var(--border-radius);
-  padding: 20px;
-  box-shadow: var(--shadow-light);
-}
-
-.weather-info {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 16px;
-  background-color: var(--background-color);
-  border-radius: var(--border-radius);
-  transition: var(--transition);
-}
-
-.weather-info:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-light);
-}
-
-.weather-icon {
-  width: 64px;
-  height: 64px;
-}
-
-.weather-details {
-  flex: 1;
-}
-
-.temperature {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--primary-color);
-  margin-bottom: 5px;
-}
-
-.description {
-  text-transform: capitalize;
-  color: var(--text-secondary);
-  margin-bottom: 5px;
-}
-
-.humidity, .wind {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-/* Main Content Area */
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  padding: 24px;
-  gap: 20px;
-}
-
-#map {
-  flex: 1;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-medium);
-  overflow: hidden;
-}
-
-/* Controls Section */
-.controls {
-  background-color: var(--card-background);
-  padding: 20px;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-medium);
-}
-
-.button-group {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-/* Enhanced Button Styles */
-.btn {
-  padding: 12px 20px;
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: var(--transition);
-  box-shadow: var(--shadow-light);
-}
-
-.btn:hover {
-  background-color: var(--secondary-color);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
-}
-
-.btn.active {
-  background-color: var(--accent-color);
-}
-
-.btn-danger {
-  background-color: #ff4757;
-}
-
-.btn-danger:hover {
-  background-color: #ee3445;
-}
+/* Route Instructions */
 .route-instructions {
   background-color: var(--background-color);
   padding: 15px;
@@ -329,179 +232,175 @@ body {
   font-size: 14px;
 }
 
+/* Waypoint Controls */
 .waypoint-controls {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 15px;
+  margin: 15px 0;
 }
 
 .waypoint-btn {
   display: flex;
   align-items: center;
   padding: 12px 15px;
-  transition: all 0.3s ease;
+  transition: var(--transition);
   position: relative;
   overflow: hidden;
 }
 
-.waypoint-btn i {
-  font-size: 18px;
-  margin-right: 10px;
+/* Traffic Layer Styles */
+.traffic-incident-icon {
+  background: none;
+  border: none;
 }
 
-.button-text {
+.traffic-incident-icon i {
+  font-size: 24px;
+  text-shadow: 2px 2px 3px rgba(0,0,0,0.3);
+}
+
+.incident-popup {
+  padding: 15px;
+  min-width: 250px;
+}
+
+.incident-popup h4 {
+  margin: 0 0 10px 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.incident-details {
+  margin-top: 10px;
+  font-size: 0.9em;
+}
+
+.incident-details p {
+  margin: 6px 0;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
+  align-items: center;
+  gap: 8px;
 }
 
-.button-hint {
-  font-size: 11px;
-  opacity: 0.9;
-  margin-top: 2px;
-}
-
-.btn-success {
-  background-color: #28a745;
-}
-
-.btn-success:hover {
-  background-color: #218838;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
-}
-
-.btn-danger {
-  background-color: #dc3545;
-}
-
-.btn-danger:hover {
-  background-color: #c82333;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
-}
-
-/* Active state for buttons */
-.waypoint-btn.active {
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0% {
-      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.2);
-  }
-  70% {
-      box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
-  }
-  100% {
-      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-  }
-}
-
-/* Loading States */
-.btn.loading {
-  position: relative;
-  pointer-events: none;
-  opacity: 0.8;
-}
-
-.btn.loading::after {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  border: 2px solid transparent;
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-.waypoint-controls {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.btn-success {
-  background-color: #28a745;
-}
-
-.btn-success:hover {
-  background-color: #218838;
-}
-
-/* Custom marker styles */
-.start-marker {
-  filter: hue-rotate(120deg); /* Makes the marker green */
-}
-
-.end-marker {
-  filter: hue-rotate(0deg); /* Keeps the marker red */
-}
-
-/* Context Menu */
-.context-menu {
-  position: fixed;
+/* Map Controls */
+.controls {
   background-color: var(--card-background);
+  padding: 20px;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-medium);
-  padding: 8px 0;
-  min-width: 200px;
   z-index: 1000;
 }
 
-.context-menu ul {
-  list-style: none;
+.button-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-.context-menu li {
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
+/* Custom Map Controls */
+.map-control-button {
+  width: 34px;
+  height: 34px;
+  line-height: 34px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-primary);
+  background: white;
+  display: block;
   transition: var(--transition);
 }
 
-.context-menu li:hover {
-  background-color: var(--background-color);
-  color: var(--primary-color);
+.map-control-button:hover {
+  background: var(--background-color);
 }
 
-.context-menu i {
-  width: 20px;
+.map-control-button.active {
+  background: var(--primary-color);
+  color: white;
 }
 
-/* Modal Styles */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+/* Routing Preferences */
+.routing-preferences {
+  background: white;
+  padding: 15px;
+  border-radius: 4px;
+  box-shadow: var(--shadow-light);
+}
+
+.preference-controls {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-}
-
-.modal-content {
-  background-color: var(--card-background);
-  padding: 24px;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-medium);
-  max-width: 500px;
-  width: 90%;
-}
-
-.modal h3 {
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 10px;
-  margin-bottom: 16px;
-  color: var(--text-primary);
+}
+
+.routing-select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.avoid-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.avoid-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* Button Styles */
+.btn {
+  padding: 12px 20px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+  box-shadow: var(--shadow-light);
+}
+
+.btn:hover {
+  background-color: var(--secondary-color);
+  -webkit-transform: translateY(-2px);
+  -ms-transform: translateY(-2px);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.btn.active {
+  background-color: var(--accent-color);
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+}
+
+.btn-danger:hover {
+  background-color: #ee3445;
+}
+
+.btn-success {
+  background-color: var(--success-color);
+}
+
+.btn-success:hover {
+  background-color: #218838;
 }
 
 /* Status Information */
@@ -516,14 +415,56 @@ body {
   box-shadow: var(--shadow-medium);
   font-size: 14px;
   z-index: 1000;
+  transition: var(--transition);
 }
 
 #status-info.error {
-  background-color: #ff4757;
+  background-color: var(--danger-color);
   color: white;
 }
+/* Enhanced Status Message Styles */
+.fade-message {
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+}
 
-/* Loading Overlay */
+.error-message {
+  color: var(--danger-color);
+}
+
+/* Status Animation */
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.fade-text {
+  animation: fadeInOut 3s forwards;
+}
+
+/* Location Information Styles */
+.location-popup h4 {
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.location-details {
+  margin-top: 8px;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}
+
+.address {
+  font-size: 0.95em;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+/* Loading States */
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -547,9 +488,44 @@ body {
   animation: spin 1s linear infinite;
 }
 
+/* Animations */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.2); }
+  70% { box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+}
+
+/* Time Display */
+.time-display {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-light);
+}
+
+/* Route Summary */
+.route-summary {
+  padding: 15px;
+  background: var(--background-color);
+  border-radius: var(--border-radius);
+  margin-top: 15px;
+}
+
+.route-summary p {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  color: var(--text-primary);
 }
 
 /* Utility Classes */
@@ -579,9 +555,8 @@ body {
       padding: 16px;
   }
 
-  .weather-info {
-      flex-direction: column;
-      text-align: center;
+  .search-wrapper {
+      width: 100%;
   }
 
   .button-group {
@@ -593,11 +568,8 @@ body {
       font-size: 14px;
   }
 
-  .context-menu {
-      width: 90%;
-      max-width: 280px;
-      left: 50% !important;
-      transform: translateX(-50%);
+  .routing-preferences {
+      max-width: 100%;
   }
 
   #status-info {
@@ -605,10 +577,39 @@ body {
       text-align: center;
   }
 }
+/* Status Text Transitions */
+#status-info .fade-text {
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+  display: inline-block;
+}
+
+#status-info .fade-text.hidden {
+  opacity: 0;
+  display: none;
+}
+
+/* Animation for status messages */
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.fade-text {
+  animation: fadeInOut 3s forwards;
+}
+
 
 /* Print Styles */
 @media print {
-  .sidebar, .controls, .context-menu, #status-info {
+  .sidebar, 
+  .controls, 
+  .context-menu, 
+  #status-info,
+  .search-control,
+  .routing-preferences {
       display: none !important;
   }
 
